@@ -47,19 +47,6 @@ export default function Navigation() {
             )}
           </button>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="/products" className="hover:text-gray-600">
-              Shop
-            </Link>
-            <Link href="/about" className="hover:text-gray-600">
-              About
-            </Link>
-            <Link href="/contact" className="hover:text-gray-600">
-              Contact
-            </Link>
-          </div>
-
           {/* Desktop Icons */}
           <div className="hidden md:flex items-center space-x-4">
             <Link href="/wishlist" className="p-2">
@@ -83,28 +70,6 @@ export default function Navigation() {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <Link
-                href="/products"
-                className="block px-3 py-2 rounded-md hover:bg-gray-50"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Shop
-              </Link>
-              <Link
-                href="/about"
-                className="block px-3 py-2 rounded-md hover:bg-gray-50"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link
-                href="/contact"
-                className="block px-3 py-2 rounded-md hover:bg-gray-50"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contact
-              </Link>
-              <div className="border-t border-gray-200 my-2"></div>
               <Link
                 href="/wishlist"
                 className="block px-3 py-2 rounded-md hover:bg-gray-50"

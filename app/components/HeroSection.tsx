@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 
 const slideshowImages = [
-  '/Image4.png',
+  '/Image1.png',
   '/Image1.png',
   '/Image2.png',
   '/Image3.png'
