@@ -5,10 +5,10 @@
   "framework": "nextjs",
   "regions": ["lhr1"],
   "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret",
-    "CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
-    "CLOUDINARY_API_KEY": "@cloudinary_api_key",
-    "CLOUDINARY_API_SECRET": "@cloudinary_api_secret"
+    "MONGODB_URI": "mongodb+srv://damiandobrenko:test123@makeup.yahrh.mongodb.net/?retryWrites=true&w=majority&appName=makeup",
+    "JWT_SECRET": "48de51f615554fa16d5fba46aab739cd6b1687f126d3a6e36ca2976946e161bc04de6062d045f2d36be47405feea17e4a8b82aec70a788cc67d2a7478402ec78169bbf089808e357c1596aa84257aa3459058148bc5db92ff02a0845442c38e3374577416a71b6360d0ce1e57092389f44546808fbfa90a1882dbee38362fbd9902fff0ad3c787dce0188be572a23fc65af3070bef7e9abcba794a29ac76a70d1095d3bcc2f7fa1bf701233a3c5af15cf761c982af191e5a498bf8c6fac05e88be6549439be44957f74e4402f18a1fec19f9b7272eeb2e6743a12557892545213aae0b94563522cea58e38b7da90a7b354df18562c2abca2a51530f67d748c1b",
+    "CLOUDINARY_CLOUD_NAME": "dtxlrzvco",
+    "CLOUDINARY_API_KEY": "298551547943734",
+    "CLOUDINARY_API_SECRET": "-9LSLk6_4Z5VhtO3PlX_MIQ7uQ8"
   }
 } 
