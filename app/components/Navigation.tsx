@@ -27,7 +27,7 @@ export default function Navigation() {
           {/* Logo */}
           <Link href="/" className="relative w-[80px] md:w-[120px] h-[40px] md:h-[60px]">
             <Image
-              src={isMobile ? '/logo2.png' : '/logo.png'}
+              src={isMobile ? '/logo2.png' : '/logo2.png'}
               alt="Bloom"
               fill
               className="object-contain"
