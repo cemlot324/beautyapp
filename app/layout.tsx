@@ -42,9 +42,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <GoogleAnalytics />
       </head>
       <body className={`${poppins.className} bg-white text-black`}>
-        <GoogleAnalytics />
         <WishlistProvider>
           <BasketProvider>
             <PWARegistration />
