@@ -6,6 +6,7 @@ import { Heart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useBasket } from '../context/BasketContext';
 import { useWishlist } from '../context/WishlistContext';
+import Link from 'next/link';
 
 interface ProductCardProps {
   product: {
@@ -86,7 +87,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="relative aspect-square">
+      <Link href={`/products/${product._id}`} className="relative aspect-square block">
         <button
           className={`absolute top-2 right-2 z-10 p-1.5 bg-white rounded-full hover:bg-gray-100 disabled:opacity-50 transition-colors ${
             isWishlisted ? 'bg-pink-50' : ''
@@ -115,7 +116,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <span className="text-white font-semibold">Out of Stock</span>
           </div>
         )}
-      </div>
+      </Link>
       <div className="p-4">
         <h3 className="text-lg font-medium text-gray-900 truncate">
           {product.title}

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
 import User from '@/app/models/User';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 // Add interface for wishlist item
 interface WishlistItem {
@@ -10,17 +14,30 @@ interface WishlistItem {
   imageUrl: string;
 }
 
+async function getAuthenticatedUserId() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth-token');
+  
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const decoded = jwt.verify(token.value, JWT_SECRET) as { userId: string };
+  return decoded.userId;
+}
+
 export async function GET() {
   try {
+    const userId = await getAuthenticatedUserId();
     await connectToDatabase();
-    const user = await User.findOne({ /* add your user identification logic */ });
+    const user = await User.findById(userId);
     
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json(user.wishlist || []);
-  } catch (err) { // Rename error to err since we're using it
+  } catch (err) {
     console.error('Failed to fetch wishlist:', err);
     return NextResponse.json(
       { error: 'Failed to fetch wishlist' },
@@ -31,11 +48,19 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token');
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const decoded = jwt.verify(token.value, JWT_SECRET) as { userId: string };
     const body = await request.json();
     const { productId, title, price, imageUrl } = body;
 
     await connectToDatabase();
-    const user = await User.findOne({ /* add your user identification logic */ });
+    const user = await User.findById(decoded.userId);
     
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -65,6 +90,14 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token');
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const decoded = jwt.verify(token.value, JWT_SECRET) as { userId: string };
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
 
@@ -76,7 +109,7 @@ export async function DELETE(request: Request) {
     }
 
     await connectToDatabase();
-    const user = await User.findOne({ /* add your user identification logic */ });
+    const user = await User.findById(decoded.userId);
     
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

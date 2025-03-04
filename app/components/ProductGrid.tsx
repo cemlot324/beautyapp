@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ProductCard from './ProductCard';
+import Image from 'next/image';
+import Link from 'next/link';
+import { FiHeart } from 'react-icons/fi';
+import { useWishlist } from '../context/WishlistContext';
 
 interface Product {
   _id: string;
@@ -14,21 +17,20 @@ interface Product {
   stock: number;
 }
 
-const ProductGrid = () => {
+export default function ProductGrid() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [availableFilters, setAvailableFilters] = useState<string[]>(['all']);
   const productsPerPage = 9;
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('featured');
+  const { items: wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setLoading(true);
-        setError(null);
         console.log('Fetching products...');
         
         const response = await fetch('/api/products');
@@ -63,8 +65,6 @@ const ProductGrid = () => {
         console.error('Error fetching products:', err);
         setError(err instanceof Error ? err.message : 'Failed to load products');
         setProducts([]);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -76,13 +76,34 @@ const ProductGrid = () => {
     setCurrentPage(1);
   }, [selectedFilter]);
 
-  const filteredProducts = selectedFilter === 'all'
-    ? products
-    : products.filter(product => product.filters.includes(selectedFilter));
+  const sortProducts = (productsToSort: Product[]) => {
+    const sorted = [...productsToSort];
+    switch (sortBy) {
+      case 'price-low':
+        return sorted.sort((a, b) => a.price - b.price);
+      case 'price-high':
+        return sorted.sort((a, b) => b.price - a.price);
+      case 'name-asc':
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      case 'name-desc':
+        return sorted.sort((a, b) => b.title.localeCompare(a.title));
+      default:
+        return sorted;
+    }
+  };
 
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const startIndex = (currentPage - 1) * productsPerPage;
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
+  // First filter, then sort
+  const processedProducts = sortProducts(
+    selectedFilter === 'all'
+      ? products
+      : products.filter(product => product.filters.includes(selectedFilter))
+  );
+
+  // Then paginate
+  const paginatedProducts = processedProducts.slice(
+    (currentPage - 1) * productsPerPage,
+    currentPage * productsPerPage
+  );
 
   if (error) {
     return (
@@ -160,73 +181,163 @@ const ProductGrid = () => {
 
           {/* Main Content Area */}
           <div className="flex-1 p-4 md:p-8">
-            {/* Active Filter Display */}
-            <div className="mb-4 flex items-center gap-2">
-              <span className="text-sm text-gray-500">Active Filter:</span>
-              <span className="px-3 py-1 bg-black text-white rounded-full text-sm">
-                {selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)}
-              </span>
-            </div>
+            {/* Header section with filters and sort */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">Active Filter:</span>
+                <span className="px-3 py-1 bg-black text-white rounded-full text-sm">
+                  {selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)}
+                </span>
+              </div>
 
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="text-xl text-gray-600">Loading products...</div>
-              </div>
-            ) : paginatedProducts.length === 0 ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="text-xl text-gray-600">No products found</div>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {paginatedProducts.map((product) => (
-                    <ProductCard key={product._id} product={product} />
+              {/* Redesigned sort dropdown */}
+              <div className="relative group">
+                <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm 
+                                 hover:border-black transition-colors flex items-center gap-2 min-w-[200px]">
+                  <span className="flex-1 text-left">
+                    {sortBy === 'featured' && 'Featured'}
+                    {sortBy === 'price-low' && 'Price: Low to High'}
+                    {sortBy === 'price-high' && 'Price: High to Low'}
+                    {sortBy === 'name-asc' && 'Name: A to Z'}
+                    {sortBy === 'name-desc' && 'Name: Z to A'}
+                  </span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                <div className="absolute right-0 mt-2 py-2 w-full bg-white border border-gray-100 
+                              rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 
+                              group-hover:visible transition-all z-50">
+                  {[
+                    { value: 'featured', label: 'Featured' },
+                    { value: 'price-low', label: 'Price: Low to High' },
+                    { value: 'price-high', label: 'Price: High to Low' },
+                    { value: 'name-asc', label: 'Name: A to Z' },
+                    { value: 'name-desc', label: 'Name: Z to A' },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setSortBy(option.value)}
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 
+                                ${sortBy === option.value ? 'text-black font-medium' : 'text-gray-600'}`}
+                    >
+                      {option.label}
+                    </button>
                   ))}
                 </div>
+              </div>
+            </div>
 
-                {/* Responsive pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex flex-wrap justify-center gap-2">
+            {/* Product grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {paginatedProducts.map((product) => (
+                <div key={product._id} className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                  <div className="relative aspect-square">
+                    <Link href={`/products/${product._id}`}>
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.title}
+                        fill
+                        className="object-cover rounded-t-xl"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      />
+                    </Link>
                     <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className={`px-3 md:px-4 py-2 rounded-md ${
-                        currentPage === 1
-                          ? 'bg-gray-100 text-gray-400'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
+                      onClick={() => {
+                        const isInWishlist = wishlistItems.some(item => item.productId === product._id);
+                        if (isInWishlist) {
+                          removeFromWishlist(product._id);
+                        } else {
+                          addToWishlist({
+                            productId: product._id,
+                            title: product.title,
+                            price: product.price,
+                            imageUrl: product.imageUrl
+                          });
+                        }
+                      }}
+                      className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-sm
+                                 hover:bg-gray-50 transition-colors"
                     >
-                      Prev
-                    </button>
-                    
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i + 1}
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`px-3 md:px-4 py-2 rounded-md ${
-                          currentPage === i + 1
-                            ? 'bg-black text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      <FiHeart
+                        className={`w-5 h-5 ${
+                          wishlistItems.some(item => item.productId === product._id)
+                            ? 'fill-black stroke-black'
+                            : 'stroke-gray-600'
                         }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                    
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className={`px-3 md:px-4 py-2 rounded-md ${
-                        currentPage === totalPages
-                          ? 'bg-gray-100 text-gray-400'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      Next
+                      />
                     </button>
                   </div>
-                )}
-              </>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <Link href={`/products/${product._id}`}>
+                          <h3 className="font-medium text-gray-900 group-hover:text-gray-600 
+                                       transition-colors line-clamp-1 mb-1">
+                            {product.title}
+                          </h3>
+                          <p className="text-gray-900 font-semibold">
+                            £{product.price.toFixed(2)}
+                          </p>
+                        </Link>
+                      </div>
+                      <button
+                        onClick={() => {
+                          // Add to basket logic here
+                        }}
+                        className="flex-shrink-0 border-2 border-black text-black px-4 py-2 rounded-full 
+                                 hover:bg-black hover:text-white transition-all text-sm font-medium whitespace-nowrap"
+                      >
+                        Add to Basket
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Responsive pagination */}
+            {processedProducts.length > productsPerPage && (
+              <div className="mt-8 flex flex-wrap justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 md:px-4 py-2 rounded-md ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Prev
+                </button>
+                
+                {[...Array(Math.ceil(processedProducts.length / productsPerPage))].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 md:px-4 py-2 rounded-md ${
+                      currentPage === i + 1
+                        ? 'bg-black text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(processedProducts.length / productsPerPage)))}
+                  disabled={currentPage === Math.ceil(processedProducts.length / productsPerPage)}
+                  className={`px-3 md:px-4 py-2 rounded-md ${
+                    currentPage === Math.ceil(processedProducts.length / productsPerPage)
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -242,5 +353,3 @@ const ProductGrid = () => {
     </div>
   );
 };
-
-export default ProductGrid; 

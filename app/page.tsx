@@ -4,6 +4,7 @@ import HeroSection from './components/HeroSection';
 import ProductGrid from './components/ProductGrid';
 import Newsletter from './components/Newsletter';
 import Footer from './components/Footer';
+import GalleryWall from './components/GalleryWall';
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <Navigation />
       <HeroSection />
       <ProductGrid />
+      <GalleryWall />
       <Newsletter />
       <Footer />
     </main>

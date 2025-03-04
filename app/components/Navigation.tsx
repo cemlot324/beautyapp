@@ -4,11 +4,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiMenu, FiX, FiShoppingBag, FiHeart, FiUser } from 'react-icons/fi';
 import { useBasket } from '../context/BasketContext';
+import { useWishlist } from '../context/WishlistContext';
+import SearchBar from './SearchBar';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const { items } = useBasket();
+  const { items: basketItems } = useBasket();
+  const { items: wishlistItems } = useWishlist();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -35,6 +38,11 @@ export default function Navigation() {
             />
           </Link>
 
+          {/* Search Bar */}
+          <div className="flex-1 mx-6 hidden md:block">
+            <SearchBar />
+          </div>
+
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -49,14 +57,21 @@ export default function Navigation() {
 
           {/* Desktop Icons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/wishlist" className="p-2">
+            <Link href="/dashboard?section=wishlist" className="p-2 relative">
               <FiHeart className="h-6 w-6" />
+              {wishlistItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-white text-xs 
+                               rounded-full h-5 w-5 flex items-center justify-center">
+                  {wishlistItems.length}
+                </span>
+              )}
             </Link>
             <Link href="/basket" className="p-2 relative">
               <FiShoppingBag className="h-6 w-6" />
-              {items.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {items.length}
+              {basketItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-white text-xs 
+                               rounded-full h-5 w-5 flex items-center justify-center">
+                  {basketItems.length}
                 </span>
               )}
             </Link>
@@ -69,20 +84,23 @@ export default function Navigation() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden">
+            <div className="px-4 py-3">
+              <SearchBar />
+            </div>
             <div className="px-2 pt-2 pb-3 space-y-1">
               <Link
-                href="/wishlist"
+                href="/dashboard?section=wishlist"
                 className="block px-3 py-2 rounded-md hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Wishlist
+                Wishlist ({wishlistItems.length})
               </Link>
               <Link
                 href="/basket"
                 className="block px-3 py-2 rounded-md hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Basket ({items.length})
+                Basket ({basketItems.length})
               </Link>
               <Link
                 href="/dashboard"

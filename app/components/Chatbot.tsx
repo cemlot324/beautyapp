@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiMessageSquare, FiX, FiSend, FiUser } from 'react-icons/fi';
 import Image from 'next/image';
 
@@ -21,6 +21,15 @@ export default function Chatbot() {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
+  // Add auto-popup effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 10000); // 10 seconds delay
+
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array means this runs once per mount/refresh
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -84,7 +93,7 @@ export default function Chatbot() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                 <Image
-                  src="/logo2.png"
+                  src="/botlogo.png"
                   alt="Bloom"
                   width={24}
                   height={24}
@@ -105,7 +114,7 @@ export default function Chatbot() {
           </div>
           
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 pb-2 space-y-4">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -115,7 +124,7 @@ export default function Chatbot() {
                   <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center">
                     {message.isBot ? (
                       <Image
-                        src="/logo2.png"
+                        src="/botlogo.png"
                         alt="Bloom"
                         width={24}
                         height={24}
@@ -156,19 +165,20 @@ export default function Chatbot() {
           </div>
           
           {/* Input */}
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
+          <div className="p-4 pt-2 border-t bg-white">
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Type a message..."
-                className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-black"
+                className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-black text-sm"
               />
               <button
                 onClick={handleSend}
-                className="p-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
+                disabled={!input.trim()}
+                className="p-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 flex-shrink-0"
               >
                 <FiSend className="w-5 h-5" />
               </button>

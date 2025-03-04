@@ -1,11 +1,14 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '../components/Navigation';
 import { FiPackage, FiHeart, FiUser, FiLogOut } from 'react-icons/fi';
 import { useWishlist } from '../context/WishlistContext';
+import ProductManagement from '../components/admin/ProductManagement';
+import OrderManagement from '../components/admin/OrderManagement';
+import UserManagement from '../components/admin/UserManagement';
 
 interface Order {
   _id: string;
@@ -40,22 +43,15 @@ interface User {
   postcode: string;
 }
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('orders');
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab') || 'products';
+  const [activeTab, setActiveTab] = useState(searchParams.get('section') || 'orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { items, removeFromWishlist } = useWishlist();
-
-  useEffect(() => {
-    // Move window usage into useEffect
-    const searchParams = new URLSearchParams(window.location.search);
-    const sectionParam = searchParams.get('section');
-    if (sectionParam) {
-      setActiveTab(sectionParam);
-    }
-  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -200,47 +196,71 @@ export default function Dashboard() {
 
       case 'wishlist':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
             {items.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <FiHeart className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">Your wishlist is empty</p>
-                <Link href="/" className="text-black hover:underline mt-2 inline-block">
-                  Discover Products
+              <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+                <FiHeart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Your wishlist is empty
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  Add items you love to your wishlist. Review them anytime and easily move them to the basket.
+                </p>
+                <Link
+                  href="/"
+                  className="inline-block bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  Start Shopping
                 </Link>
               </div>
             ) : (
-              items.map((item) => (
-                <div key={item.productId} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  <div className="relative aspect-square">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      width={64}
-                      height={64}
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium text-gray-900 truncate">{item.title}</h3>
-                    <p className="text-gray-600">£{item.price.toFixed(2)}</p>
-                    <div className="mt-4 flex gap-2">
-                      <button
-                        onClick={() => removeFromWishlist(item.productId)}
-                        className="flex-1 px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50"
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {items.map((item) => (
+                  <div
+                    key={item.productId}
+                    className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow"
+                  >
+                    <Link href={`/products/${item.productId}`} className="block relative aspect-square">
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority
+                      />
+                    </Link>
+                    
+                    <div className="p-4">
+                      <Link 
+                        href={`/products/${item.productId}`}
+                        className="block text-lg font-medium text-gray-900 hover:text-gray-700 mb-2 line-clamp-2"
                       >
-                        Remove
-                      </button>
-                      <button
-                        onClick={() => {/* Add to basket logic */}}
-                        className="flex-1 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-                      >
-                        Add to Basket
-                      </button>
+                        {item.title}
+                      </Link>
+                      <p className="text-lg font-semibold text-gray-900 mb-4">
+                        £{item.price.toFixed(2)}
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => removeFromWishlist(item.productId)}
+                          className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-colors"
+                        >
+                          Remove
+                        </button>
+                        <button
+                          onClick={() => {
+                            /* Add your basket logic here */
+                          }}
+                          className="flex-1 px-4 py-2.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
+                        >
+                          Add to Basket
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         );
@@ -398,5 +418,17 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 } 
