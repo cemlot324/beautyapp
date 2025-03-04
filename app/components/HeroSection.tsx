@@ -82,7 +82,8 @@ export default function HeroSection() {
             priority
           />
           <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
-            <button className="px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 text-black font-medium rounded-full">
+            <button className="px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300
+             text-black font-medium rounded-full">
               Find Out More
             </button>
           </div>

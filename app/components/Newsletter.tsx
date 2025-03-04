@@ -5,15 +5,34 @@ import { useState } from 'react';
 export default function Newsletter() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
-    
-    // Add your newsletter signup logic here
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setStatus('success');
-    setEmail('');
+    setErrorMessage('');
+
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+
+      setStatus('success');
+      setEmail('');
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong');
+    }
   };
 
   return (
@@ -56,10 +75,15 @@ export default function Newsletter() {
             </button>
           </form>
 
-          {/* Success Message */}
+          {/* Status Messages */}
           {status === 'success' && (
             <p className="text-green-400 mt-2 text-center md:text-left">
               Thanks for subscribing!
+            </p>
+          )}
+          {status === 'error' && (
+            <p className="text-red-400 mt-2 text-center md:text-left">
+              {errorMessage}
             </p>
           )}
         </div>

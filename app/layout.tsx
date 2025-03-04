@@ -6,6 +6,7 @@ import { WishlistProvider } from './context/WishlistContext';
 import WelcomePopup from './components/WelcomePopup';
 import Chatbot from './components/Chatbot';
 import PWARegistration from './components/PWARegistration';
+import GoogleAnalytics from './components/GoogleAnalytics';
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={`${poppins.className} bg-white text-black`}>
+        <GoogleAnalytics />
         <WishlistProvider>
           <BasketProvider>
             <PWARegistration />
