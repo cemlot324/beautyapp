@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const ProductSchema = new mongoose.Schema({
+const productSchema = new mongoose.Schema({
   title: {
     type: String,
     required: [true, 'Title is required'],
@@ -17,18 +17,12 @@ const ProductSchema = new mongoose.Schema({
   imageUrl: {
     type: String,
     required: [true, 'Image URL is required'],
-    validate: {
-      validator: function(v: string) {
-        return /^https?:\/\/.+/.test(v);
-      },
-      message: 'Invalid image URL format'
-    }
   },
   filters: [{
     type: String,
     trim: true,
   }],
-  isFeatured: {
+  isNew: {
     type: Boolean,
     default: true,
   },
@@ -37,9 +31,41 @@ const ProductSchema = new mongoose.Schema({
     required: [true, 'Stock is required'],
     min: [0, 'Stock cannot be negative'],
     default: 0,
-  }
+  },
+  ingredients: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  volume: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  howToUse: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  benefits: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  skinType: [{
+    type: String,
+    trim: true,
+    enum: ['All Skin Types', 'Normal', 'Dry', 'Oily', 'Combination', 'Sensitive'],
+  }],
 }, {
   timestamps: true,
+  strict: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-export default mongoose.models.Product || mongoose.model('Product', ProductSchema); 
+mongoose.models = {};
+
+const Product = mongoose.model('Product', productSchema);
+
+export default Product; 

@@ -5,12 +5,11 @@ import Product from '@/app/models/Product';
 export async function GET() {
   try {
     await connectToDatabase();
-    const products = await Product.find({}).sort({ createdAt: -1 });
+    const products = await Product.find().sort({ createdAt: -1 });
     return NextResponse.json(products);
-  } catch (err) {
-    console.error('Failed to fetch products:', err);
+  } catch (error) {
     return NextResponse.json(
-      { error: 'Error fetching products' },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }
@@ -18,32 +17,30 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const productData = await request.json();
     
-    // Validate required fields
-    if (!body.title || !body.description || !body.imageUrl || body.price === undefined) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    // Clean up empty strings to undefined for optional fields
+    const cleanedData = {
+      ...productData,
+      ingredients: productData.ingredients || undefined,
+      volume: productData.volume || undefined,
+      howToUse: productData.howToUse || undefined,
+      benefits: productData.benefits || undefined,
+      skinType: productData.skinType?.length ? productData.skinType : undefined,
+    };
 
     await connectToDatabase();
+
+    const product = await Product.create(cleanedData);
     
-    const product = await Product.create(body);
-    return NextResponse.json(product, { status: 201 });
+    return NextResponse.json(product);
   } catch (error) {
-    console.error('Product creation error:', error);
-    
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
-    }
+    console.error('Error creating product:', error);
+    // Log the full error for debugging
+    console.log('Full error:', JSON.stringify(error, null, 2));
     
     return NextResponse.json(
-      { error: 'Error creating product' },
+      { error: 'Failed to create product', details: error.message },
       { status: 500 }
     );
   }

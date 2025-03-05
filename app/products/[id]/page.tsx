@@ -8,6 +8,7 @@ import { useBasket } from '@/app/context/BasketContext';
 import { useWishlist } from '@/app/context/WishlistContext';
 import { Heart } from 'lucide-react';
 import { FiArrowLeft } from 'react-icons/fi';
+import ProductRating from '@/app/components/ProductRating';
 
 interface Product {
   _id: string;
@@ -17,6 +18,11 @@ interface Product {
   imageUrl: string;
   filters: string[];
   stock: number;
+  ingredients?: string;
+  volume?: string;
+  howToUse?: string;
+  benefits?: string;
+  skinType?: string[];
 }
 
 export default function ProductPage() {
@@ -137,11 +143,15 @@ export default function ProductPage() {
 
           {/* Product Details */}
           <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
-            <p className="text-xl font-semibold text-gray-900">
-              £{product.price.toFixed(2)}
-            </p>
-            <p className="text-gray-600">{product.description}</p>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
+              <p className="text-xl font-semibold text-gray-900 mt-2">
+                £{product.price.toFixed(2)}
+              </p>
+              {product.volume && (
+                <p className="text-gray-600 mt-1">{product.volume}</p>
+              )}
+            </div>
 
             <div className="space-y-4">
               <button
@@ -165,17 +175,53 @@ export default function ProductPage() {
                 className="w-full py-3 px-8 rounded-full font-medium border
                   border-black hover:bg-gray-50 flex items-center justify-center gap-2"
               >
-                <Heart 
-                  className={isInWishlist(product._id) ? 'fill-black' : ''} 
-                />
+                <Heart className={isInWishlist(product._id) ? 'fill-black' : ''} />
                 {isInWishlist(product._id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
               </button>
             </div>
 
+            {/* Product Description */}
+            <div className="border-t pt-6">
+              <h2 className="text-lg font-semibold mb-2">Description</h2>
+              <p className="text-gray-600">{product.description}</p>
+            </div>
+
+            {/* Benefits Section */}
+            {product.benefits && (
+              <div className="border-t pt-6">
+                <h2 className="text-lg font-semibold mb-2">Benefits</h2>
+                <p className="text-gray-600 whitespace-pre-line">{product.benefits}</p>
+              </div>
+            )}
+
+            {/* How to Use Section */}
+            {product.howToUse && (
+              <div className="border-t pt-6">
+                <h2 className="text-lg font-semibold mb-2">How to Use</h2>
+                <p className="text-gray-600 whitespace-pre-line">{product.howToUse}</p>
+              </div>
+            )}
+
+            {/* Ingredients Section */}
+            {product.ingredients && (
+              <div className="border-t pt-6">
+                <h2 className="text-lg font-semibold mb-2">Ingredients</h2>
+                <p className="text-gray-600 text-sm whitespace-pre-line">
+                  {product.ingredients}
+                </p>
+              </div>
+            )}
+
             {/* Additional Product Info */}
-            <div className="border-t pt-6 mt-8">
+            <div className="border-t pt-6">
               <h2 className="text-lg font-semibold mb-4">Product Details</h2>
               <div className="space-y-2">
+                {product.skinType && product.skinType.length > 0 && (
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Suitable for:</span>{' '}
+                    {product.skinType.join(', ')}
+                  </p>
+                )}
                 <p className="text-sm text-gray-600">
                   <span className="font-medium">Categories:</span>{' '}
                   {product.filters.join(', ')}
@@ -188,6 +234,9 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <ProductRating productId={id} />
       </div>
     </div>
   );

@@ -12,6 +12,11 @@ interface Product {
   filters: string[];
   isNew: boolean;
   stock: number;
+  ingredients?: string;
+  volume?: string;
+  howToUse?: string;
+  benefits?: string;
+  skinType?: string[];
 }
 
 export default function ProductManagement() {
@@ -27,6 +32,11 @@ export default function ProductManagement() {
   const [newFilter, setNewFilter] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ingredients, setIngredients] = useState('');
+  const [volume, setVolume] = useState('');
+  const [howToUse, setHowToUse] = useState('');
+  const [benefits, setBenefits] = useState('');
+  const [skinType, setSkinType] = useState<string[]>([]);
 
   useEffect(() => {
     fetchProducts();
@@ -89,7 +99,12 @@ export default function ProductManagement() {
         stock: parseInt(formData.stock || '0'),
         imageUrl,
         filters: formData.filters,
-        isNew: true
+        isNew: true,
+        ingredients,
+        volume,
+        howToUse,
+        benefits,
+        skinType,
       };
 
       console.log('Sending product data:', productData);
@@ -141,6 +156,15 @@ export default function ProductManagement() {
       filters: formData.filters.filter(filter => filter !== filterToRemove),
     });
   };
+
+  const skinTypeOptions = [
+    'All Skin Types',
+    'Normal',
+    'Dry',
+    'Oily',
+    'Combination',
+    'Sensitive'
+  ];
 
   return (
     <div className="p-6">
@@ -286,6 +310,88 @@ export default function ProductManagement() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-black focus:border-black"
                   required
                 />
+              </div>
+            </div>
+
+            {/* Volume */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Volume/Size
+              </label>
+              <input
+                type="text"
+                value={volume}
+                onChange={(e) => setVolume(e.target.value)}
+                placeholder="e.g., 30ml, 50g"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none"
+              />
+            </div>
+
+            {/* Ingredients */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Ingredients
+              </label>
+              <textarea
+                value={ingredients}
+                onChange={(e) => setIngredients(e.target.value)}
+                placeholder="List the product ingredients"
+                rows={4}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none"
+              />
+            </div>
+
+            {/* How to Use */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                How to Use
+              </label>
+              <textarea
+                value={howToUse}
+                onChange={(e) => setHowToUse(e.target.value)}
+                placeholder="Instructions for using the product"
+                rows={3}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none"
+              />
+            </div>
+
+            {/* Benefits */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Benefits
+              </label>
+              <textarea
+                value={benefits}
+                onChange={(e) => setBenefits(e.target.value)}
+                placeholder="Key benefits and results"
+                rows={3}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none"
+              />
+            </div>
+
+            {/* Skin Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Suitable for Skin Types
+              </label>
+              <div className="mt-2 space-y-2">
+                {skinTypeOptions.map((type) => (
+                  <label key={type} className="inline-flex items-center mr-4">
+                    <input
+                      type="checkbox"
+                      checked={skinType.includes(type)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSkinType([...skinType, type]);
+                        } else {
+                          setSkinType(skinType.filter(t => t !== type));
+                        }
+                      }}
+                      className="rounded border-gray-300 text-black focus:ring-black"
+                    />
+                    <span className="ml-2 text-sm text-gray-600">{type}</span>
+                  </label>
+                ))}
               </div>
             </div>
 
