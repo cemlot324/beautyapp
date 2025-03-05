@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiHeart } from 'react-icons/fi';
 import { useWishlist } from '../context/WishlistContext';
+import { useBasket } from '../context/BasketContext';
 
 interface Product {
   _id: string;
@@ -27,6 +28,8 @@ export default function ProductGrid() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState('featured');
   const { items: wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
+  const { addToBasket } = useBasket();
+  const [addedToBasket, setAddedToBasket] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -104,6 +107,18 @@ export default function ProductGrid() {
     (currentPage - 1) * productsPerPage,
     currentPage * productsPerPage
   );
+
+  const handleAddToBasket = (product: Product) => {
+    addToBasket({
+      productId: product._id,
+      title: product.title,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      quantity: 1
+    });
+    setAddedToBasket(product._id);
+    setTimeout(() => setAddedToBasket(null), 1500);
+  };
 
   if (error) {
     return (
@@ -283,13 +298,22 @@ export default function ProductGrid() {
                         </Link>
                       </div>
                       <button
-                        onClick={() => {
-                          // Add to basket logic here
-                        }}
-                        className="flex-shrink-0 border-2 border-black text-black px-4 py-2 rounded-full 
-                                 hover:bg-black hover:text-white transition-all text-sm font-medium whitespace-nowrap"
+                        onClick={() => handleAddToBasket(product)}
+                        className={`flex-shrink-0 border-2 border-black text-black px-4 py-2 
+                                  rounded-full hover:bg-black hover:text-white transition-all 
+                                  text-sm font-medium whitespace-nowrap relative
+                                  ${addedToBasket === product._id ? 'bg-black text-white' : ''}`}
                       >
-                        Add to Basket
+                        {addedToBasket === product._id ? (
+                          <span className="flex items-center gap-2">
+                            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Added
+                          </span>
+                        ) : (
+                          'Add to Basket'
+                        )}
                       </button>
                     </div>
                   </div>

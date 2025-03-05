@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiHeart } from 'react-icons/fi';
 import { useWishlist } from '../context/WishlistContext';
+import { useBasket } from '../context/BasketContext';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 
@@ -23,6 +24,7 @@ function SearchResultsContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { items: wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
+  const { addToBasket } = useBasket();
 
   useEffect(() => {
     const fetchSearchResults = async () => {
@@ -113,6 +115,13 @@ function SearchResultsContent() {
                         </Link>
                       </div>
                       <button
+                        onClick={() => addToBasket({
+                          productId: product._id,
+                          title: product.title,
+                          price: product.price,
+                          imageUrl: product.imageUrl,
+                          quantity: 1
+                        })}
                         className="flex-shrink-0 border-2 border-black text-black px-4 py-2 
                                  rounded-full hover:bg-black hover:text-white transition-all 
                                  text-sm font-medium whitespace-nowrap"

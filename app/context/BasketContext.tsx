@@ -12,16 +12,19 @@ interface BasketItem {
 
 interface BasketContextType {
   items: BasketItem[];
-  addToBasket: (product: BasketItem) => Promise<void>;
+  addToBasket: (item: BasketItem) => void;
   removeFromBasket: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearBasket: () => void;
+  showPreview: boolean;
+  setShowPreview: (show: boolean) => void;
 }
 
-const BasketContext = createContext<BasketContextType | undefined>(undefined);
+export const BasketContext = createContext<BasketContextType | undefined>(undefined);
 
 export function BasketProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<BasketItem[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Load basket from localStorage on mount
   useEffect(() => {
@@ -36,20 +39,22 @@ export function BasketProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('basket', JSON.stringify(items));
   }, [items]);
 
-  const addToBasket = async (product: BasketItem) => {
+  const addToBasket = (newItem: BasketItem) => {
     setItems(currentItems => {
-      const existingItem = currentItems.find(item => item.productId === product.productId);
-      
+      const existingItem = currentItems.find(item => item.productId === newItem.productId);
       if (existingItem) {
         return currentItems.map(item =>
-          item.productId === product.productId
+          item.productId === newItem.productId
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      
-      return [...currentItems, { ...product, quantity: 1 }];
+      return [...currentItems, newItem];
     });
+    // Show preview when item is added
+    setShowPreview(true);
+    // Hide preview after 3 seconds
+    setTimeout(() => setShowPreview(false), 3000);
   };
 
   const removeFromBasket = (productId: string) => {
@@ -79,6 +84,8 @@ export function BasketProvider({ children }: { children: ReactNode }) {
       removeFromBasket,
       updateQuantity,
       clearBasket,
+      showPreview,
+      setShowPreview
     }}>
       {children}
     </BasketContext.Provider>
