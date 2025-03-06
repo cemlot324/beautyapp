@@ -28,6 +28,7 @@ export default function ProductManagement() {
     price: '',
     stock: '0',
     filters: [] as string[],
+    imageUrl: '',
   });
   const [newFilter, setNewFilter] = useState('');
   const [image, setImage] = useState<File | null>(null);
@@ -53,28 +54,37 @@ export default function ProductManagement() {
     }
   };
 
-  const handleImageUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Set the image for preview
+    setImage(file);
 
     try {
+      const formData = new FormData();
+      formData.append('file', file);
+
       const response = await fetch('/api/admin/upload', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Upload Error:', errorData);
-        throw new Error(`Upload failed: ${errorData.error || 'Unknown error'}`);
+        throw new Error('Upload failed');
       }
 
       const data = await response.json();
-      console.log('Upload successful:', data);
-      return data.url;
+      if (data.url) {
+        setFormData(prev => ({
+          ...prev,
+          imageUrl: data.url
+        }));
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
-      throw new Error('Failed to upload image. Please try again.');
+      alert('Failed to upload image. Please try again.');
+      setImage(null); // Clear the preview if upload fails
     }
   };
 
@@ -87,10 +97,8 @@ export default function ProductManagement() {
         throw new Error('Please select an image');
       }
 
-      const imageUrl = await handleImageUpload(image);
-      
-      if (!imageUrl) {
-        throw new Error('Failed to get image URL');
+      if (!formData.imageUrl) {
+        throw new Error('Image upload failed. Please try again.');
       }
 
       const productData = {
@@ -98,7 +106,7 @@ export default function ProductManagement() {
         description: formData.description,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock || '0'),
-        imageUrl,
+        imageUrl: formData.imageUrl,
         filters: formData.filters,
         isNew: true,
         ingredients,
@@ -130,6 +138,7 @@ export default function ProductManagement() {
         price: '',
         stock: '0',
         filters: [],
+        imageUrl: '',
       });
       setImage(null);
       fetchProducts();
@@ -234,7 +243,8 @@ export default function ProductManagement() {
                     type="file"
                     className="hidden"
                     accept="image/*"
-                    onChange={(e) => e.target.files && setImage(e.target.files[0])}
+                    onChange={handleImageChange}
+                    required
                   />
                 </label>
               </div>

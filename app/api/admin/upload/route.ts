@@ -13,20 +13,16 @@ console.log('Cloudinary Config:', {
 });
 
 cloudinary.config({
-  cloud_name: cloudName,
-  api_key: apiKey,
-  api_secret: apiSecret,
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 export async function POST(request: Request) {
   try {
-    if (!cloudName || !apiKey || !apiSecret) {
-      throw new Error('Missing Cloudinary credentials');
-    }
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
 
-    const data = await request.formData();
-    const file = data.get('file') as File;
-    
     if (!file) {
       return NextResponse.json(
         { error: 'No file provided' },
@@ -37,21 +33,28 @@ export async function POST(request: Request) {
     // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const fileStr = `data:${file.type};base64,${buffer.toString('base64')}`;
+    const base64String = `data:${file.type};base64,${buffer.toString('base64')}`;
 
     // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(fileStr, {
-      folder: 'bloom-products',
+    const result = await cloudinary.uploader.upload(base64String, {
+      folder: 'products',
     });
 
     return NextResponse.json({
-      url: result.secure_url
+      url: result.secure_url,
+      publicId: result.public_id,
     });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error uploading image' },
+      { error: 'Failed to upload image' },
       { status: 500 }
     );
   }
-} 
+}
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}; 
