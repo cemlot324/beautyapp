@@ -17,28 +17,22 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    console.time('productCreation');
     const productData = await request.json();
     
-    // Clean up empty strings to undefined for optional fields
-    const cleanedData = {
-      ...productData,
-      ingredients: productData.ingredients || undefined,
-      volume: productData.volume || undefined,
-      howToUse: productData.howToUse || undefined,
-      benefits: productData.benefits || undefined,
-      skinType: productData.skinType?.length ? productData.skinType : undefined,
-    };
-
+    console.log('Connecting to database...');
     await connectToDatabase();
+    console.log('Database connected');
 
-    const product = await Product.create(cleanedData);
+    console.log('Creating product...');
+    const product = await Product.create(productData);
+    console.log('Product created');
+    
+    console.timeEnd('productCreation');
     
     return NextResponse.json(product);
   } catch (error) {
     console.error('Error creating product:', error);
-    // Log the full error for debugging
-    console.log('Full error:', JSON.stringify(error, null, 2));
-    
     return NextResponse.json(
       { error: 'Failed to create product', details: error.message },
       { status: 500 }

@@ -54,10 +54,12 @@ export default function ProductManagement() {
   };
 
   const handleImageUpload = async (file: File) => {
+    console.log('Starting image upload...');
     const formData = new FormData();
     formData.append('file', file);
 
     try {
+      console.time('imageUpload');
       const response = await fetch('/api/admin/upload', {
         method: 'POST',
         body: formData,
@@ -65,57 +67,52 @@ export default function ProductManagement() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Upload Error:', errorData);
         throw new Error(`Upload failed: ${errorData.error || 'Unknown error'}`);
       }
 
       const data = await response.json();
-      console.log('Upload successful:', data);
+      console.timeEnd('imageUpload');
+      console.log('Image upload successful:', data.url);
       return data.url;
     } catch (error) {
-      console.error('Error uploading image:', error);
-      throw new Error('Failed to upload image. Please try again.');
+      console.error('Image upload error:', error);
+      throw error;
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log('Starting product submission...');
 
     try {
+      console.time('totalSubmission');
+      
       if (!image) {
         throw new Error('Please select an image');
       }
 
+      // Upload image first
+      console.log('Uploading image...');
       const imageUrl = await handleImageUpload(image);
-      
-      if (!imageUrl) {
-        throw new Error('Failed to get image URL');
-      }
+      console.log('Image upload completed');
 
-      const productData = {
-        title: formData.title,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock || '0'),
-        imageUrl,
-        filters: formData.filters,
-        isNew: true,
-        ingredients,
-        volume,
-        howToUse,
-        benefits,
-        skinType,
-      };
-
-      console.log('Sending product data:', productData);
-
+      // Then create product
+      console.log('Creating product...');
       const response = await fetch('/api/admin/products', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock),
+          imageUrl,
+          ingredients,
+          volume,
+          howToUse,
+          benefits,
+          skinType,
+        }),
       });
 
       if (!response.ok) {
@@ -123,6 +120,10 @@ export default function ProductManagement() {
         throw new Error(errorData.error || 'Failed to create product');
       }
 
+      console.timeEnd('totalSubmission');
+      console.log('Product created successfully');
+
+      // Reset form and refresh product list
       setShowAddForm(false);
       setFormData({
         title: '',
@@ -134,8 +135,8 @@ export default function ProductManagement() {
       setImage(null);
       fetchProducts();
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
-      alert(error instanceof Error ? error.message : 'An error occurred');
+      console.error('Submission error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to create product');
     } finally {
       setLoading(false);
     }
