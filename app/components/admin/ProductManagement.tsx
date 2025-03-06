@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FiPlus, FiX, FiUpload } from 'react-icons/fi';
+import { FiPlus, FiX, FiUpload, FiTrash2 } from 'react-icons/fi';
 
 interface Product {
   _id: string;
@@ -37,6 +37,7 @@ export default function ProductManagement() {
   const [howToUse, setHowToUse] = useState('');
   const [benefits, setBenefits] = useState('');
   const [skinType, setSkinType] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -165,6 +166,31 @@ export default function ProductManagement() {
     'Combination',
     'Sensitive'
   ];
+
+  const handleDelete = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+
+    setIsDeleting(productId);
+    try {
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+
+      // Refresh the products list
+      await fetchProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Failed to delete product');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -416,6 +442,7 @@ export default function ProductManagement() {
               <th className="text-left py-4 px-6">Stock</th>
               <th className="text-left py-4 px-6">Filters</th>
               <th className="text-left py-4 px-6">Status</th>
+              <th className="text-left py-4 px-6">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -459,6 +486,20 @@ export default function ProductManagement() {
                       NEW
                     </span>
                   )}
+                </td>
+                <td className="py-4 px-6">
+                  <button
+                    onClick={() => handleDelete(product._id)}
+                    disabled={isDeleting === product._id}
+                    className="text-red-600 hover:text-red-800 transition-colors"
+                    title="Delete product"
+                  >
+                    {isDeleting === product._id ? (
+                      <span className="text-sm">Deleting...</span>
+                    ) : (
+                      <FiTrash2 className="w-5 h-5" />
+                    )}
+                  </button>
                 </td>
               </tr>
             ))}

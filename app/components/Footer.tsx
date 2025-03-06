@@ -4,6 +4,18 @@ import AdminLoginModal from './AdminLoginModal';
 
 export default function Footer() {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [showThankYou, setShowThankYou] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      setShowThankYou(true);
+      setEmail('');
+      // Auto hide the thank you message after 5 seconds
+      setTimeout(() => setShowThankYou(false), 5000);
+    }
+  };
 
   return (
     <>
@@ -23,6 +35,17 @@ export default function Footer() {
         isOpen={isAdminModalOpen}
         onClose={() => setIsAdminModalOpen(false)}
       />
+
+      <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+        {/* ... your existing newsletter input ... */}
+      </form>
+
+      {/* Thank you popup */}
+      {showThankYou && (
+        <div className="fixed bottom-4 right-4 bg-black text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
+          <p className="text-sm">Thanks for subscribing! Continue shopping</p>
+        </div>
+      )}
     </>
   );
 } 

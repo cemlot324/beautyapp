@@ -1,37 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import ReactConfetti from 'react-confetti';
 
 export default function Newsletter() {
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+  });
+
+  useEffect(() => {
+    const updateWindowSize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', updateWindowSize);
+    updateWindowSize();
+
+    return () => window.removeEventListener('resize', updateWindowSize);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus('loading');
-    setErrorMessage('');
-
-    try {
-      const response = await fetch('/api/newsletter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
-      }
-
-      setStatus('success');
+    if (email) {
+      setShowConfetti(true);
+      setShowThankYou(true);
       setEmail('');
-    } catch (error) {
-      setStatus('error');
-      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong');
+      
+      // Stop confetti after 2 seconds for a burst effect
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 2000);
     }
   };
 
@@ -66,28 +71,57 @@ export default function Newsletter() {
             />
             <button
               type="submit"
-              disabled={status === 'loading'}
               className="px-6 py-3 bg-white text-black rounded-full font-medium
-                       hover:bg-gray-100 transition-colors disabled:opacity-50
+                       hover:bg-gray-100 transition-colors
                        w-full md:w-auto"
             >
-              {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
+              Subscribe
             </button>
           </form>
-
-          {/* Status Messages */}
-          {status === 'success' && (
-            <p className="text-green-400 mt-2 text-center md:text-left">
-              Thanks for subscribing!
-            </p>
-          )}
-          {status === 'error' && (
-            <p className="text-red-400 mt-2 text-center md:text-left">
-              {errorMessage}
-            </p>
-          )}
         </div>
       </div>
+
+      {/* Confetti with burst configuration */}
+      {showConfetti && (
+        <ReactConfetti
+          width={windowSize.width}
+          height={windowSize.height}
+          numberOfPieces={200}
+          recycle={false}
+          gravity={0.3}
+          initialVelocityX={15}
+          initialVelocityY={30}
+          tweenDuration={100}
+          spread={360}
+          colors={['#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#98FB98', '#FF1493']}
+          onConfettiComplete={() => {
+            setShowConfetti(false);
+          }}
+        />
+      )}
+
+      {/* Centered Thank you popup with backdrop */}
+      {showThankYou && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white text-black px-8 py-6 rounded-xl shadow-xl max-w-md w-full mx-4 animate-bounce-in">
+            <h3 className="text-2xl font-bold text-center mb-2">
+              🎉 Thank You!
+            </h3>
+            <p className="text-center text-gray-600">
+              Thanks for subscribing to our newsletter. Get ready for exclusive offers and updates!
+            </p>
+            <button
+              onClick={() => {
+                setShowThankYou(false);
+                setShowConfetti(false);
+              }}
+              className="mt-4 w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors"
+            >
+              Continue Shopping
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 } 
