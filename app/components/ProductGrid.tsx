@@ -30,6 +30,7 @@ export default function ProductGrid() {
   const { items: wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
   const { addToBasket } = useBasket();
   const [addedToBasket, setAddedToBasket] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -120,6 +121,22 @@ export default function ProductGrid() {
     setTimeout(() => setAddedToBasket(null), 1500);
   };
 
+  useEffect(() => {
+    // Update online status
+    setIsOnline(navigator.onLine);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -131,6 +148,25 @@ export default function ProductGrid() {
             className="mt-4 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
           >
             Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOnline) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <h2 className="text-xl font-semibold mb-2">You're Offline</h2>
+          <p className="text-gray-600 mb-4">
+            Some features may be limited while you're offline.
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+          >
+            Retry
           </button>
         </div>
       </div>
